@@ -59,11 +59,7 @@ I trained a linear SVM on the extracted features (color_histogram feature + HOG 
 
 I used the method proposed in class. The code can be found in the 12th code cell of Ipython Notebook. For time saving, I extract all the feature from a whole image once instead of sliding windows. The treshold heatmap and 'label' function is used for search best vote of detected car.
 
-In my initial pipeline, the result looks good but I think it is better to set up multiple scale sliding windows with respect to different image area. For example in horizon, we should use small sliding window but in area near camera vision, we should use a big window. In this way, I build up my final pipeline with 3 different scale of windows.
-
-####2. Final Pipeline
-
-Ultimately I searched on two scales using YCrCb 3-channel HOG features plus spatially binned color and histograms of color in the feature vector, which provided a nice result.  Here are some example images regarless some wobbly bounding boxes.
+In my initial pipeline, the result looks good but I think it is better to set up multiple scale sliding windows with respect to different image area. I set up minimal scale in horizonal area, maximum scale for nearby area and a intermediate scale between them. In this way, I build up the initial pipeline(see the 14th code cell) with 3 different scale of windows. Moreover, I use a threshold to filter small detetected windows when `x-man-xmin < 50` or `yman-ymin < 50` as coded in the 13th cell. I searched on three scales using YCrCb 3-channel HOG features plus spatially binned color and histograms of color in the feature vector, which provided a nice result. Here are some example images.
 
 ![alt text][image3]
 ![alt text][image4]
@@ -71,6 +67,11 @@ Ultimately I searched on two scales using YCrCb 3-channel HOG features plus spat
 ![alt text][image6]
 ![alt text][image7]
 ![alt text][image8]
+
+####2. Final Pipeline
+
+From the above result, we can still find some false positive. As for a video, we can benefit from mutiple frames to filter false negative. Because a detection should be found at or near the same position in several subsequent frames. The simplest way to do this is to store the most recent n number of heat maps, take a sum of all of the heat maps, and set a threshold on the combined heat map. In the test I choose 10 subsequent frame to test. The code is available in the 16th and 17th cell.
+
 ---
 
 ### Video Implementation
@@ -82,14 +83,11 @@ Here's a [link to my video result](./result.mp4)
 
 ####2. Filter of False Positive
 
-I recorded the positions of positive detections in each frame of the video.  From the positive detections I created a heatmap and then thresholded that map to identify vehicle positions.  I then used `scipy.ndimage.measurements.label()` to identify individual blobs in the heatmap.  I then assumed each blob corresponded to a vehicle.  I constructed bounding boxes to cover the area of each blob detected.  
+I recorded the positions of positive detections in each frame of the video.  From the positive detections I created a heatmap and then thresholded that map to identify vehicle positions.  I then used `scipy.ndimage.measurements.label()` to identify individual blobs in the heatmap.  I then assumed each blob corresponded to a vehicle.  I constructed bounding boxes to cover the area of each blob detected.
 
-The result in above image shows the heatmap from a series of frames of video, the result of `scipy.ndimage.measurements.label()` and the bounding boxes then overlaid on the last frame of video.
-
+In the video test, I also use multiple frames to filter noises as I mentioned before. And it works well.
 ---
 
 ###Discussion
 
 In the result, we can see somewhat wobbly or unstable bounding boxes occur sometime, especially under tree shade. I tried to tune my parameter but it is difficult to remove. I think maybe we can agument some other dataset by changing illumination to make the training model more robust. Meanwhile a CNN model deserve a try as well. 
-
-To filter the false positive, the most effective way should be to establish frame-frame tracking. It is just to have a mean-value of bouding window positions after several frames. I will improve it in this way. But right now I have no too much time.
